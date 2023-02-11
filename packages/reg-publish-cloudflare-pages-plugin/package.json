@@ -1,7 +1,7 @@
 {
-  "name": "reg-publish-s3-plugin",
+  "name": "reg-publish-cloudflare-pages-plugin",
   "version": "0.12.1",
-  "description": "Fetch and publish snapshot images to AWS S3.",
+  "description": "Fetch and publish snapshot images to Cloudflare Pages.",
   "regSuitPlugin": {
     "recommended": true
   },
@@ -16,16 +16,17 @@
     "reg-suit-plugin"
   ],
   "author": {
-    "name": "Quramy",
-    "email": "yosuke.kurami@gmail.com"
+    "name": "Jumpei Ogawa",
+    "email": "phanective@gmail.com"
   },
   "repository": "git+https://github.com/reg-viz/reg-suit.git",
   "license": "MIT",
   "dependencies": {
-    "aws-sdk": "^2.755.0",
+    "cloudflare": "^2.9.1",
     "mkdirp": "^1.0.4",
     "reg-suit-util": "^0.12.1",
-    "uuid": "^8.3.0"
+    "uuid": "^8.3.0",
+    "wrangler": "^2.9.1"
   },
   "devDependencies": {
     "@types/mkdirp": "1.0.2",

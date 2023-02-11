@@ -21,6 +21,13 @@
     }
   },
   {
+    "name": "reg-publish-cloudflare-pages-plugin",
+    "description": "Fetch and publish snapshot images to Cloudflare R2.",
+    "metadata": {
+      "recommended": true
+    }
+  },
+  {
     "name": "reg-notify-chatwork-plugin",
     "description": "Notify reg-suit result to Chatwork channel.",
     "metadata": {}

@@ -1,119 +1,58 @@
 import { v4 as uuid } from "uuid";
-import { S3, config as awsConfig } from "aws-sdk";
 import { PluginPreparer, PluginCreateOptions, PluginLogger } from "reg-suit-interface";
-import { PluginConfig } from "./s3-publisher-plugin";
+import { PluginConfig } from "./cloudflare-pages-publisher-plugin";
+import { CloudflarePages } from "./cloudflare-pages";
 
 export interface SetupInquireResult {
-  createBucket: boolean;
-  bucketName?: string;
+  createProject: boolean;
+  project?: string;
 }
 
-function createPolicy(bucketName: string) {
-  return {
-    Version: "2012-10-17",
-    Id: "Policy1498486961145",
-    Statement: [
-      {
-        Sid: "Stmt1498486956732",
-        Effect: "Allow",
-        Principal: "*",
-        Action: "s3:GetObject",
-        Resource: `arn:aws:s3:::${bucketName}/*`,
-      },
-    ],
-  };
-}
+const PROJECT_PREFIX = "reg-publish-project";
 
-const BUCKET_PREFIX = "reg-publish-bucket";
-
-export class S3BucketPreparer implements PluginPreparer<SetupInquireResult, PluginConfig> {
-  private _s3client = new S3();
-  _logger!: PluginLogger;
+export class CloudflarePagesPreparer implements PluginPreparer<SetupInquireResult, PluginConfig> {
+  #logger!: PluginLogger;
 
   inquire() {
     return [
       {
-        name: "createBucket",
+        name: "createProject",
         type: "confirm",
-        message: "Create a new S3 bucket",
+        message: "Create a new Cloudflare Pages project",
         default: true,
       },
       {
-        name: "bucketName",
+        name: "project",
         type: "input",
-        message: "Existing bucket name",
-        when: (ctx: any) => !(ctx as { createBucket: boolean }).createBucket,
+        message: "Existing Cloudflare Pages project name",
+        when: (ctx: any) => !(ctx as { createProject: boolean }).createProject,
       },
     ];
   }
 
-  prepare(config: PluginCreateOptions<SetupInquireResult>) {
-    this._logger = config.logger;
+  async prepare(config: PluginCreateOptions<SetupInquireResult>): Promise<{ project: string }> {
+    this.#logger = config.logger;
     const ir = config.options;
-    if (!ir.createBucket) {
-      return Promise.resolve({
-        bucketName: ir.bucketName as string,
-      });
+    if (!ir.createProject) {
+      return { project: ir.project as string };
     } else {
       const id = uuid();
-      const bucketName = `${BUCKET_PREFIX}-${id}`;
-      if (!awsConfig.credentials || !awsConfig.credentials.accessKeyId) {
-        this._logger.warn("Failed to read AWS credentials.");
-        this._logger.warn(
-          `Create ${this._logger.colors.magenta("~/.aws/credentials")} or export ${this._logger.colors.green(
-            "$AWS_ACCESS_KEY_ID",
-          )} and ${this._logger.colors.green("$AWS_SECRET_ACCESS_KEY")}.`,
-        );
-        return Promise.resolve({ bucketName: "your_s3_bucket_name" });
-      }
+      const project = `${PROJECT_PREFIX}-${id}`;
+
+      const cloudflarePages = new CloudflarePages(project);
+
       if (config.noEmit) {
-        this._logger.info(`Skip to create S3 bucket ${bucketName} because noEmit option.`);
-        return Promise.resolve({ bucketName });
+        this.#logger.info(`Skip to create Cloudflare Pages project ${project} because of noEmit option.`);
+        return { project };
       }
-      this._logger.info(`Create new S3 bucket: ${this._logger.colors.magenta(bucketName)}`);
-      const spinner = this._logger.getSpinner(`creating bucket...`);
+
+      this.#logger.info(`Create new Cloudflare Pages project: ${this.#logger.colors.magenta(project)}`);
+      const spinner = this.#logger.getSpinner(`creating project...`);
       spinner.start();
-      return this._createBucket(bucketName)
-        .then(bucketName => {
-          return this._updatePolicy(bucketName);
-        })
-        .then(bucketName => {
-          spinner.stop();
-          return { bucketName };
-        });
+      await cloudflarePages.createProject();
+      spinner.stop();
+
+      return { project };
     }
-  }
-
-  _updatePolicy(bucketName: string) {
-    return new Promise<string>((resolve, reject) => {
-      this._s3client.putBucketPolicy(
-        {
-          Bucket: bucketName,
-          Policy: JSON.stringify(createPolicy(bucketName)),
-        },
-        err => {
-          if (err) {
-            return reject(err);
-          }
-          resolve(bucketName);
-        },
-      );
-    });
-  }
-
-  _createBucket(bucketName: string) {
-    return new Promise<string>((resolve, reject) => {
-      this._s3client.createBucket(
-        {
-          Bucket: bucketName,
-        },
-        err => {
-          if (err) {
-            return reject(err);
-          }
-          return resolve(bucketName);
-        },
-      );
-    });
   }
 }

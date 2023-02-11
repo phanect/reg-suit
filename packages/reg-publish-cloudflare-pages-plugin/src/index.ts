@@ -1,11 +1,11 @@
 import { PublisherPluginFactory } from "reg-suit-interface";
-import { S3PublisherPlugin } from "./s3-publisher-plugin";
-import { S3BucketPreparer } from "./s3-bucket-preparer";
+import { CloudflarePagesPublisherPlugin } from "./cloudflare-pages-publisher-plugin";
+import { CloudflarePagesPreparer } from "./cloudflare-pages-preparer";
 
 const pluginFactory: PublisherPluginFactory = () => {
   return {
-    preparer: new S3BucketPreparer(),
-    publisher: new S3PublisherPlugin(),
+    preparer: new CloudflarePagesPreparer(),
+    publisher: new CloudflarePagesPublisherPlugin(),
   };
 };
 
