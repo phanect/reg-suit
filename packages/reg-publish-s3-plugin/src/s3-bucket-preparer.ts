@@ -67,7 +67,7 @@ export class S3BucketPreparer implements PluginPreparer<SetupInquireResult, Plug
         return Promise.resolve({ bucketName: "your_s3_bucket_name" });
       }
       if (config.noEmit) {
-        this._logger.info(`Skip to create S3 bucket ${bucketName} because noEmit option.`);
+        this._logger.info(`Skip to create S3 bucket ${bucketName} because of noEmit option.`);
         return Promise.resolve({ bucketName });
       }
       this._logger.info(`Create new S3 bucket: ${this._logger.colors.magenta(bucketName)}`);
